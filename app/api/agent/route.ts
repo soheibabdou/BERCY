@@ -30,13 +30,35 @@ async function getSolBalance(address: string): Promise<string> {
   } catch { return "0"; }
 }
 
+
+async function getUsdcBalance(address: string): Promise<string> {
+  try {
+    const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
+    const r = await fetch(`https://mainnet.helius-rpc.com/?api-key=${HELIUS_KEY}`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0', id: 1,
+        method: 'getTokenAccountsByOwner',
+        params: [address, { mint: USDC_MINT }, { encoding: 'jsonParsed' }]
+      }),
+      cache: 'no-store',
+    });
+    const j = await r.json();
+    const accounts = j?.result?.value ?? [];
+    if (accounts.length === 0) return '0.00';
+    const amount = accounts[0]?.account?.data?.parsed?.info?.tokenAmount?.uiAmountString ?? '0.00';
+    return amount;
+  } catch { return '0.00'; }
+}
 export async function POST(req: NextRequest) {
   try {
     const { message, walletAddress } = await req.json();
 
-    const [solPrice, solBalance] = await Promise.all([
+    const [solPrice, solBalance, usdcBalance] = await Promise.all([
       getSolPrice(),
       getSolBalance(walletAddress),
+      getUsdcBalance(walletAddress),
     ]);
 
     const systemPrompt = `You are Bercy — an AI-native neobank on Solana.
@@ -44,6 +66,7 @@ export async function POST(req: NextRequest) {
 LIVE DATA:
 - User wallet: ${walletAddress}
 - SOL balance: ${solBalance} SOL
+- USDC balance: ${usdcBalance} USDC
 - SOL price: $${solPrice} USD
 
 ALWAYS respond with valid JSON only. No markdown. No explanation outside JSON.
