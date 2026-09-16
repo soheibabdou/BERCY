@@ -86,7 +86,12 @@ If balance is low, return send_sol or send_usdc JSON anyway — never return a m
     const raw = response.choices[0]?.message?.content ?? '{"type":"message","text":"Sorry, try again."}';
     const jsonMatch = raw.match(/\{[\s\S]*\}/);
     if (!jsonMatch) return NextResponse.json({ type: "message", text: raw });
-    return NextResponse.json(JSON.parse(jsonMatch[0]));
+    const obj = JSON.parse(jsonMatch[0]);
+    if (obj.to) {
+      const addrMatch = obj.to.match(/[1-9A-HJ-NP-Za-km-z]{32,44}/);
+      if (addrMatch) obj.to = addrMatch[0];
+    }
+    return NextResponse.json(obj);
   } catch (e: any) {
     return NextResponse.json({ type: "message", text: `Error: ${e?.message}` }, { status: 500 });
   }
