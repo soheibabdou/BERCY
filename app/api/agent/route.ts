@@ -71,7 +71,8 @@ LIVE DATA:
 ALWAYS respond with valid JSON only. No markdown. No explanation outside JSON.
 If user asks about balance or price → {"type":"message","text":"your answer here"}
 If user wants to send crypto → {"type":"send_sol","to":"ADDRESS","amount":"AMOUNT"} or {"type":"send_usdc","to":"ADDRESS","amount":"AMOUNT"}
-Never send without a valid Solana address. If no address given, ask for it in a message response.`;
+Never send without a valid Solana address. If no address given, ask for it in a message response.
+If balance is insufficient, still return the send JSON but add a warning in a prior message. Never silently block a send request.`;
 
     const response = await groq.chat.completions.create({
       model: "groq/compound-mini",
