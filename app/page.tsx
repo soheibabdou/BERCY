@@ -194,7 +194,7 @@ export default function Page() {
         <footer className="mt-auto pt-12 text-center text-xs text-muted">Built on Solana · Powered by Alchemy</footer>
       {showSend && <SendModal onClose={() => { setShowSend(false); walletAddress && load(walletAddress); }} />}
       {showReceive && walletAddress && <ReceiveModal address={walletAddress} onClose={() => setShowReceive(false)} />}
-      {walletAddress && <ChatAgent walletAddress={walletAddress} onSend={handleAgentSend} />}
+      {walletAddress && <ChatAgent walletAddress={walletAddress} onSend={(token, to, amount) => { setPreFill({ token, to, amount }); setShowSend(true); }} />}
       </div>
     </div>
   );
