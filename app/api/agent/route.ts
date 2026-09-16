@@ -3,25 +3,26 @@ import Groq from "groq-sdk";
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 const ALCHEMY_KEY = process.env.ALCHEMY_API_KEY ?? "";
+const HELIUS_KEY = process.env.HELIUS_API_KEY ?? "";
 
 const tools: Groq.Chat.ChatCompletionTool[] = [
   {
     type: "function",
     function: {
       name: "get_sol_price",
-      description: "Get the current SOL price in USD",
+      description: "Get current SOL price in USD",
       parameters: { type: "object", properties: {}, required: [] },
     },
   },
   {
     type: "function",
     function: {
-      name: "get_token_balances",
-      description: "Get the user's SOL, USDC and ETH balances",
+      name: "get_sol_balance",
+      description: "Get the user's SOL balance from Solana",
       parameters: {
         type: "object",
         properties: {
-          wallet_address: { type: "string", description: "The user's Solana wallet address" },
+          wallet_address: { type: "string" },
         },
         required: ["wallet_address"],
       },
@@ -31,13 +32,13 @@ const tools: Groq.Chat.ChatCompletionTool[] = [
     type: "function",
     function: {
       name: "send_payment",
-      description: "Initiate a payment by pre-filling the send modal. Use after confirming balance is sufficient.",
+      description: "Open the send modal pre-filled. Use after confirming sufficient balance.",
       parameters: {
         type: "object",
         properties: {
-          token: { type: "string", enum: ["SOL", "USDC"], description: "Token to send" },
-          to: { type: "string", description: "Recipient Solana wallet address" },
-          amount: { type: "string", description: "Amount to send as a decimal string" },
+          token: { type: "string", enum: ["SOL", "USDC"] },
+          to: { type: "string" },
+          amount: { type: "string" },
         },
         required: ["token", "to", "amount"],
       },
@@ -47,28 +48,38 @@ const tools: Groq.Chat.ChatCompletionTool[] = [
 
 async function runTool(name: string, args: any, walletAddress: string): Promise<string> {
   if (name === "get_sol_price") {
-    const r = await fetch(
-      `https://api.g.alchemy.com/data/v1/${ALCHEMY_KEY}/assets/prices/by-symbol?symbols=SOL`,
-      { headers: { accept: "application/json" }, cache: "no-store" }
-    );
-    const j = await r.json();
-    const price = j?.data?.[0]?.prices?.find((p: any) => p.currency === "usd")?.value ?? "unknown";
-    return JSON.stringify({ sol_price_usd: price });
+    try {
+      const r = await fetch(
+        `https://api.g.alchemy.com/data/v1/${ALCHEMY_KEY}/assets/prices/by-symbol?symbols=SOL`,
+        { headers: { accept: "application/json" }, cache: "no-store" }
+      );
+      const j = await r.json();
+      const price = j?.data?.[0]?.prices?.find((p: any) => p.currency === "usd")?.value ?? "unknown";
+      return JSON.stringify({ sol_price_usd: price });
+    } catch {
+      return JSON.stringify({ sol_price_usd: "unavailable" });
+    }
   }
 
-  if (name === "get_token_balances") {
-    const address = args.wallet_address ?? walletAddress;
-    const r = await fetch(`${process.env.NEXTAUTH_URL ?? "http://localhost:3000"}/api/tokens`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ address }),
-      cache: "no-store",
-    });
-    const j = await r.json();
-    const sol = j?.solBalance ?? 0;
-    const usdc = j?.usdcBalance ?? 0;
-    const total = j?.totalValue ?? 0;
-    return JSON.stringify({ sol, usdc, total_usd: total });
+  if (name === "get_sol_balance") {
+    try {
+      const address = args.wallet_address ?? walletAddress;
+      const r = await fetch(
+        `https://mainnet.helius-rpc.com/?api-key=${HELIUS_KEY}`,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "getBalance", params: [address] }),
+          cache: "no-store",
+        }
+      );
+      const j = await r.json();
+      const lamports = j?.result?.value ?? 0;
+      const sol = (lamports / 1_000_000_000).toFixed(6);
+      return JSON.stringify({ sol_balance: sol, wallet: address });
+    } catch {
+      return JSON.stringify({ sol_balance: "0" });
+    }
   }
 
   if (name === "send_payment") {
@@ -85,18 +96,15 @@ export async function POST(req: NextRequest) {
     const messages: Groq.Chat.ChatCompletionMessageParam[] = [
       {
         role: "system",
-        content: `You are Bercy — an AI-native neobank assistant.
-Help users send, receive, and understand their crypto on Solana.
-Always check balance before suggesting a send.
-Always show amounts in both token and USD.
-Never send without user confirmation.
-Wallet address: ${walletAddress}`,
+        content: `You are Bercy — an AI-native neobank on Solana. Help users with crypto payments.
+Always check balance before suggesting a send. Show amounts in token and USD.
+User wallet: ${walletAddress}`,
       },
       { role: "user", content: message },
     ];
 
     let response = await groq.chat.completions.create({
-      model: "openai/gpt-oss-120b",
+      model: "groq/compound-mini",
       messages,
       tools,
       tool_choice: "auto",
@@ -105,7 +113,9 @@ Wallet address: ${walletAddress}`,
 
     let choice = response.choices[0];
 
-    while (choice.finish_reason === "tool_calls" && choice.message.tool_calls) {
+    let iterations = 0;
+    while (choice.finish_reason === "tool_calls" && choice.message.tool_calls && iterations < 5) {
+      iterations++;
       messages.push(choice.message);
 
       for (const tc of choice.message.tool_calls) {
@@ -121,7 +131,7 @@ Wallet address: ${walletAddress}`,
       }
 
       response = await groq.chat.completions.create({
-        model: "openai/gpt-oss-120b",
+        model: "groq/compound-mini",
         messages,
         tools,
         tool_choice: "auto",
@@ -130,7 +140,7 @@ Wallet address: ${walletAddress}`,
       choice = response.choices[0];
     }
 
-    const text = choice.message.content ?? "I couldn't process that.";
+    const text = choice.message.content ?? "I could not process that.";
     return NextResponse.json({ type: "message", text });
   } catch (e: any) {
     return NextResponse.json({ type: "message", text: `Error: ${e?.message}` }, { status: 500 });
