@@ -8,12 +8,12 @@ const HELIUS_KEY  = process.env.HELIUS_API_KEY  ?? "";
 async function getSolPrice(): Promise<string> {
   try {
     const r = await fetch(
-      `https://api.g.alchemy.com/data/v1/${ALCHEMY_KEY}/assets/prices/by-symbol?symbols=SOL`,
-      { headers: { accept: "application/json" }, cache: "no-store" }
+      'https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd',
+      { cache: 'no-store' }
     );
     const j = await r.json();
-    return j?.data?.[0]?.prices?.find((p: any) => p.currency === "usd")?.value ?? "unknown";
-  } catch { return "unknown"; }
+    return j?.solana?.usd?.toString() ?? 'unknown';
+  } catch { return 'unknown'; }
 }
 
 async function getSolBalance(address: string): Promise<string> {
