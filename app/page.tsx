@@ -1,4 +1,5 @@
 "use client";
+import RefreshButton from "@/components/RefreshButton";
 
 import { useMemo, useState, useEffect } from "react";
 import { usePrivy, useWallets } from "@privy-io/react-auth";
@@ -99,6 +100,7 @@ export default function Page() {
               <button onClick={copyAddress} className="shrink-0 px-4 py-2 rounded-lg border border-line text-xs font-medium hover:border-accent hover:text-accent transition">
                 {copied ? "Copied ✓" : "Copy"}
               </button>
+              <RefreshButton onRefresh={() => walletAddress && load(walletAddress)} />
             </div>
           </div>
         )}
