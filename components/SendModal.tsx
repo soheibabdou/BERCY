@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { useSolanaWallets } from "@privy-io/react-auth";
+import { useWallets } from "@privy-io/react-auth";
 import {
   Connection,
   PublicKey,
@@ -10,7 +10,7 @@ import {
 } from "@solana/web3.js";
 
 export default function SendModal({ onClose }: { onClose: () => void }) {
-  const { wallets } = useSolanaWallets();
+  const { wallets } = useWallets();
   const [to, setTo] = useState("");
   const [amount, setAmount] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
