@@ -1,5 +1,6 @@
 "use client";
 import RefreshButton from "@/components/RefreshButton";
+import RefreshButton from "@/components/RefreshButton";
 
 import { useMemo, useState, useEffect } from "react";
 import { usePrivy, useWallets } from "@privy-io/react-auth";
@@ -115,15 +116,22 @@ export default function Page() {
         )}
 
         {data && (
-          <section className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+          <section className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-4">
             <div className="rounded-2xl border border-line bg-card p-5">
-              <div className="text-xs uppercase tracking-wide text-muted">Total portfolio value</div>
-              <div className="mt-2 font-mono text-3xl font-semibold">{usd(total)}</div>
+              <div className="text-xs uppercase tracking-wide text-muted">Total value</div>
+              <div className="mt-2 font-mono text-2xl font-semibold">{usd(total)}</div>
             </div>
             <div className="rounded-2xl border border-line bg-card p-5">
-              <div className="text-xs uppercase tracking-wide text-muted">Positions</div>
-              <div className="mt-2 font-mono text-3xl font-semibold">{data.positions.length}</div>
-              <p className="mt-1 text-xs text-muted">{pricedCount} with USD prices</p>
+              <div className="text-xs uppercase tracking-wide text-muted">SOL</div>
+              <div className="mt-2 font-mono text-2xl font-semibold">{formatBalance(data.positions.find(p => p.symbol === 'SOL')?.balance ?? '0')}</div>
+            </div>
+            <div className="rounded-2xl border border-line bg-card p-5">
+              <div className="text-xs uppercase tracking-wide text-muted">ETH</div>
+              <div className="mt-2 font-mono text-2xl font-semibold">{formatBalance(data.positions.find(p => p.symbol === 'ETH')?.balance ?? '0')}</div>
+            </div>
+            <div className="rounded-2xl border border-line bg-card p-5">
+              <div className="text-xs uppercase tracking-wide text-muted">USDC</div>
+              <div className="mt-2 font-mono text-2xl font-semibold">{formatBalance(data.positions.find(p => p.symbol === 'USDC')?.balance ?? '0')}</div>
             </div>
           </section>
         )}
@@ -159,9 +167,15 @@ export default function Page() {
           </section>
         ) : null}
 
-        {data && data.positions.length === 0 && (
-          <section className="mt-6 rounded-2xl border border-dashed border-line p-6 text-sm text-muted">
-            No token balances found. Fund your wallet to get started.
+        {data && data.positions.length === 0 && walletAddress && (
+          <section className="mt-6 rounded-2xl border border-dashed border-line p-6">
+            <p className="text-sm font-medium text-muted mb-4">No tokens yet. Send SOL or USDC to this address to see your balance here.</p>
+            <div className="flex items-center justify-between gap-3 rounded-xl bg-card border border-line px-4 py-3">
+              <span className="font-mono text-sm break-all text-accent">{walletAddress}</span>
+              <button onClick={copyAddress} className="shrink-0 px-4 py-2 rounded-lg border border-line text-xs font-medium hover:border-accent hover:text-accent transition">
+                {copied ? 'Copied ✓' : 'Copy'}
+              </button>
+            </div>
           </section>
         )}
 
