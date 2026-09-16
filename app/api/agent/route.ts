@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Groq from "groq-sdk";
 import { rateLimit } from "@/lib/rateLimit";
+import { validateSolanaAddress } from "@/lib/validate";
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 const ALCHEMY_KEY = process.env.ALCHEMY_API_KEY ?? "";
@@ -51,7 +52,10 @@ export async function POST(req: NextRequest) {
   try {
     const { message, walletAddress } = await req.json();
 
-    const [solPrice, solBalance, usdcBalance] = await Promise.all([
+    const addrCheck = validateSolanaAddress(walletAddress);
+  if (!addrCheck.ok) return NextResponse.json({ type: "message", text: addrCheck.error }, { status: 400 });
+
+  const [solPrice, solBalance, usdcBalance] = await Promise.all([
       getSolPrice(),
       getSolBalance(walletAddress),
       getUsdcBalance(walletAddress),

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { validateSolanaAddress } from "@/lib/validate";
 
 export const runtime = "edge";
 
@@ -121,6 +122,8 @@ async function getSolanaPositions(address: string, solPrice: number | null) {
 export async function POST(req: NextRequest) {
   try {
     const { address } = await req.json();
+    const addrCheck = validateSolanaAddress(address);
+    if (!addrCheck.ok) return NextResponse.json({ error: addrCheck.error }, { status: 400 });
     if (typeof address !== "string" || !isAddress(address)) {
       return NextResponse.json({ error: "Invalid or missing address" }, { status: 400 });
     }
