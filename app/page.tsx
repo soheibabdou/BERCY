@@ -1,5 +1,6 @@
 "use client";
 import RefreshButton from "@/components/RefreshButton";
+import ChatAgent from "@/components/ChatAgent";
 import SendModal from "@/components/SendModal";
 import ReceiveModal from "@/components/ReceiveModal";
 
@@ -42,6 +43,7 @@ export default function Page() {
   const [data, setData] = useState<Portfolio | null>(null);
   const [copied, setCopied] = useState(false);
   const [showSend, setShowSend] = useState(false);
+  const [preFill, setPreFill] = useState<{token:"SOL"|"USDC",to:string,amount:string}|null>(null);
   const [showReceive, setShowReceive] = useState(false);
 
   const walletAddress = getSolanaAddress(user) ?? wallets?.[0]?.address ?? null;
@@ -72,7 +74,12 @@ export default function Page() {
   if (!ready) return <div className="flex min-h-screen items-center justify-center"><p className="text-sm text-muted">Loading...</p></div>;
 
   if (!authenticated) {
-    return (
+    function handleAgentSend(token: "SOL"|"USDC", to: string, amount: string) {
+    setPreFill({ token, to, amount });
+    setShowSend(true);
+  }
+
+  return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-8 px-6">
         <div className="text-center">
           <p className="text-sm font-medium tracking-[0.2em] text-accent">🏛️ BERCY</p>
