@@ -45,18 +45,8 @@ export default function SendModal({ onClose }: { onClose: () => void }) {
         })
       );
 
-      const signed = await wallet.signTransaction(tx);
-      const serialized = Buffer.from(signed.serialize()).toString("base64");
-
-      const sendRes = await fetch("/api/send", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ signedTransaction: serialized }),
-      });
-      const sendJson = await sendRes.json();
-      if (sendJson.error) throw new Error(sendJson.error);
-
-      setSignature(sendJson.signature);
+      const sig = await wallet.sendTransaction(tx, connection);
+      setSignature(sig);
       setStatus("success");
     } catch (e: any) {
       setError(e?.message ?? "Transaction failed");
