@@ -28,9 +28,9 @@ export default function SendModal({
   initialAmount?: string;
 }) {
   const { wallets } = useWallets();
-  const [token, setToken] = useState<"SOL" | "USDC">("SOL");
-  const [to, setTo] = useState("");
-  const [amount, setAmount] = useState("");
+  const [token, setToken] = useState<"SOL" | "USDC">(initialToken);
+  const [to, setTo] = useState(initialTo);
+  const [amount, setAmount] = useState(initialAmount);
   const [status, setStatus] = useState<"idle"|"loading"|"success"|"error">("idle");
   const [signature, setSignature] = useState("");
   const [error, setError] = useState("");
