@@ -1,5 +1,7 @@
 "use client";
 import RefreshButton from "@/components/RefreshButton";
+import SendModal from "@/components/SendModal";
+import ReceiveModal from "@/components/ReceiveModal";
 
 import { useMemo, useState, useEffect } from "react";
 import { usePrivy, useWallets } from "@privy-io/react-auth";
@@ -39,6 +41,8 @@ export default function Page() {
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<Portfolio | null>(null);
   const [copied, setCopied] = useState(false);
+  const [showSend, setShowSend] = useState(false);
+  const [showReceive, setShowReceive] = useState(false);
 
   const walletAddress = getSolanaAddress(user) ?? wallets?.[0]?.address ?? null;
   const total = data?.totalValue ?? 0;
@@ -100,6 +104,8 @@ export default function Page() {
               <button onClick={copyAddress} className="shrink-0 px-4 py-2 rounded-lg border border-line text-xs font-medium hover:border-accent hover:text-accent transition">
                 {copied ? "Copied ✓" : "Copy"}
               </button>
+              <button onClick={() => setShowReceive(true)} className="shrink-0 px-4 py-2 rounded-lg border border-line text-xs font-medium hover:border-accent hover:text-accent transition">Receive</button>
+              <button onClick={() => setShowSend(true)} className="shrink-0 px-4 py-2 rounded-lg bg-accent text-black text-xs font-medium">Send</button>
               <RefreshButton onRefresh={() => walletAddress && load(walletAddress)} />
             </div>
           </div>
@@ -179,6 +185,8 @@ export default function Page() {
         )}
 
         <footer className="mt-auto pt-12 text-center text-xs text-muted">Built on Solana · Powered by Alchemy</footer>
+      {showSend && <SendModal onClose={() => { setShowSend(false); walletAddress && load(walletAddress); }} />}
+      {showReceive && walletAddress && <ReceiveModal address={walletAddress} onClose={() => setShowReceive(false)} />}
       </div>
     </div>
   );
