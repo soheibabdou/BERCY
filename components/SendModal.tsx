@@ -16,7 +16,17 @@ const USDC_MINT = new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
 const USDC_DECIMALS = 6;
 const HELIUS_RPC = `https://mainnet.helius-rpc.com/?api-key=${process.env.NEXT_PUBLIC_HELIUS_API_KEY ?? ""}`;
 
-export default function SendModal({ onClose }: { onClose: () => void }) {
+export default function SendModal({
+  onClose,
+  initialToken = "SOL",
+  initialTo = "",
+  initialAmount = "",
+}: {
+  onClose: () => void;
+  initialToken?: "SOL" | "USDC";
+  initialTo?: string;
+  initialAmount?: string;
+}) {
   const { wallets } = useWallets();
   const [token, setToken] = useState<"SOL" | "USDC">("SOL");
   const [to, setTo] = useState("");
