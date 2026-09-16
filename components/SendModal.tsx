@@ -45,7 +45,7 @@ export default function SendModal({ onClose }: { onClose: () => void }) {
         })
       );
 
-      const sig = await wallet.sendTransaction(tx, connection);
+      const sig = await (wallet as any).sendTransaction(tx, connection);
       setSignature(sig);
       setStatus("success");
     } catch (e: any) {
