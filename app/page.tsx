@@ -1,6 +1,5 @@
 "use client";
 import RefreshButton from "@/components/RefreshButton";
-import RefreshButton from "@/components/RefreshButton";
 
 import { useMemo, useState, useEffect } from "react";
 import { usePrivy, useWallets } from "@privy-io/react-auth";
