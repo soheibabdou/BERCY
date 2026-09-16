@@ -1,3 +1,4 @@
+import { rateLimit } from '@/lib/rateLimit';
 import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "edge";
@@ -12,6 +13,10 @@ function isAddress(v: string) {
 function formatUnits(atomic: string, decimals: number): string {
   let bi: bigint;
   try {
+  const ip = req.headers.get('x-forwarded-for') ?? req.headers.get('x-real-ip') ?? '127.0.0.1';
+  const rl = rateLimit(ip);
+  if (!rl.ok) return NextResponse.json({ error: 'Too many requests. Wait 1 minute.' }, { status: 429 });
+
     bi = atomic.startsWith("0x") ? BigInt(atomic) : BigInt(atomic);
   } catch { return "0"; }
   const d = Math.max(0, Math.min(36, decimals));

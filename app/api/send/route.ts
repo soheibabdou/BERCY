@@ -1,3 +1,4 @@
+import { rateLimit } from '@/lib/rateLimit';
 import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "edge";
@@ -6,6 +7,10 @@ const HELIUS_RPC = `https://mainnet.helius-rpc.com/?api-key=${process.env.HELIUS
 
 export async function POST(req: NextRequest) {
   try {
+  const ip = req.headers.get('x-forwarded-for') ?? req.headers.get('x-real-ip') ?? '127.0.0.1';
+  const rl = rateLimit(ip);
+  if (!rl.ok) return NextResponse.json({ error: 'Too many requests. Wait 1 minute.' }, { status: 429 });
+
     const { signedTransaction } = await req.json();
     if (!signedTransaction) {
       return NextResponse.json({ error: "Missing signedTransaction" }, { status: 400 });
