@@ -96,7 +96,7 @@ Wallet address: ${walletAddress}`,
     ];
 
     let response = await groq.chat.completions.create({
-      model: "mixtral-8x7b-32768",
+      model: "openai/gpt-oss-120b",
       messages,
       tools,
       tool_choice: "auto",
@@ -121,7 +121,7 @@ Wallet address: ${walletAddress}`,
       }
 
       response = await groq.chat.completions.create({
-        model: "mixtral-8x7b-32768",
+        model: "openai/gpt-oss-120b",
         messages,
         tools,
         tool_choice: "auto",
