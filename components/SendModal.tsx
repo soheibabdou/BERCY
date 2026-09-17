@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { useWallets } from "@privy-io/react-auth";
+import { useWallets, useSolanaWallets } from "@privy-io/react-auth";
 import {
   Connection, PublicKey, SystemProgram,
   Transaction, LAMPORTS_PER_SOL,
@@ -27,6 +27,7 @@ export default function SendModal({
   initialTo?: string;
   initialAmount?: string;
 }) {
+  const { wallets: solanaWallets } = useSolanaWallets();
   const { wallets } = useWallets();
   const [token, setToken] = useState<"SOL" | "USDC">(initialToken);
   const [to, setTo] = useState(initialTo);
@@ -37,7 +38,7 @@ export default function SendModal({
 
   async function handleSend() {
     if (!to || !amount) return;
-    const wallet = wallets.find(w => w.walletClientType === 'privy');
+    const wallet = solanaWallets[0] ?? wallets.find(w => w.walletClientType === 'privy');
     if (!wallet) { setError("No wallet found"); return; }
     setStatus("loading"); setError("");
 
