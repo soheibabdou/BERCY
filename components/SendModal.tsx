@@ -37,7 +37,7 @@ export default function SendModal({
 
   async function handleSend() {
     if (!to || !amount) return;
-    const wallet = wallets[0];
+    const wallet = wallets.find(w => w.walletClientType === 'privy');
     if (!wallet) { setError("No wallet found"); return; }
     setStatus("loading"); setError("");
 
