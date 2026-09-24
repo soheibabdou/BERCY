@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { usePrivy, useWallets } from "@privy-io/react-auth";
+import { usePrivy, useSolanaWallets } from "@privy-io/react-auth";
 import { Connection, PublicKey, SystemProgram, Transaction, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { getAssociatedTokenAddress, createAssociatedTokenAccountInstruction, createTransferInstruction, getAccount } from "@solana/spl-token";
 
@@ -20,7 +20,7 @@ function getSolanaWallet(wallets: any[]) {
 
 export default function SendModal({ onClose, initialToken = "SOL", initialTo = "", initialAmount = "" }: { onClose: () => void; initialToken?: "SOL" | "USDC"; initialTo?: string; initialAmount?: string; }) {
   const { user } = usePrivy();
-  const { wallets } = useWallets();
+  const { wallets } = useSolanaWallets();
   const [token, setToken] = useState<"SOL" | "USDC">(initialToken);
   const [to, setTo] = useState(initialTo);
   const [amount, setAmount] = useState(initialAmount);

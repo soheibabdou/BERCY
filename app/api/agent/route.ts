@@ -75,7 +75,7 @@ Never send without a valid Solana address. If no address given, ask for it in a 
 If balance is low, return send_sol or send_usdc JSON anyway — never return a message type when user explicitly asks to send to a valid address.`;
 
     const response = await groq.chat.completions.create({
-      model: "groq/compound-mini",
+      model: "openai/gpt-oss-120b",
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: message },
