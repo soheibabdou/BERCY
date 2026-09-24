@@ -1,14 +1,26 @@
 "use client";
 import { useState } from "react";
-import { useSolanaWallets } from "@privy-io/react-auth";
+import { usePrivy, useWallets } from "@privy-io/react-auth";
 import { Connection, PublicKey, SystemProgram, Transaction, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { getAssociatedTokenAddress, createAssociatedTokenAccountInstruction, createTransferInstruction, getAccount } from "@solana/spl-token";
 
 const USDC_MINT = new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
 const HELIUS_RPC = `https://mainnet.helius-rpc.com/?api-key=${process.env.NEXT_PUBLIC_HELIUS_API_KEY ?? ""}`;
 
+function getSolanaWallet(wallets: any[]) {
+  // Privy embedded Solana wallet: walletClientType === "privy" and address doesn't start with 0x
+  return (
+    wallets.find(w => w.walletClientType === "privy" && w.address && !w.address.startsWith("0x")) ??
+    wallets.find(w => w.address && !w.address.startsWith("0x")) ??
+    wallets.find(w => w.walletClientType === "privy") ??
+    wallets[0] ??
+    null
+  );
+}
+
 export default function SendModal({ onClose, initialToken = "SOL", initialTo = "", initialAmount = "" }: { onClose: () => void; initialToken?: "SOL" | "USDC"; initialTo?: string; initialAmount?: string; }) {
-  const { wallets, ready } = useSolanaWallets();
+  const { user } = usePrivy();
+  const { wallets } = useWallets();
   const [token, setToken] = useState<"SOL" | "USDC">(initialToken);
   const [to, setTo] = useState(initialTo);
   const [amount, setAmount] = useState(initialAmount);
@@ -18,8 +30,11 @@ export default function SendModal({ onClose, initialToken = "SOL", initialTo = "
 
   async function handleSend() {
     if (!to || !amount) return;
-    if (!ready || !wallets[0]) { setError("Wallet not ready. Please wait or sign out and back in."); return; }
-    const wallet = wallets[0];
+    const wallet = getSolanaWallet(wallets);
+    if (!wallet) {
+      setError(`No Solana wallet found. Wallets detected: ${wallets.length}`);
+      return;
+    }
     setStatus("loading"); setError("");
     try {
       const connection = new Connection(HELIUS_RPC, "confirmed");
@@ -87,3 +102,5 @@ export default function SendModal({ onClose, initialToken = "SOL", initialTo = "
     </div>
   );
 }
+
+
